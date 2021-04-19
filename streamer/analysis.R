@@ -2,32 +2,40 @@ library(rredis)
 redisConnect()
 
 ## get frequencies
+library(data.table)
 symbols <- redisMGet(redisKeys('symbol:*'))
 symbols <- data.table(
   symbol = sub('^symbol:', '', names(symbols)),
-  N = as.numeric(symbols))
+  count = as.numeric(symbols))
 
 # Include price
 
 library(binancer)
-binance_coins_prices()
+price <- binance_coins_prices()
 
-symbols[, .N, by = symbol]
-symbols[symbol=='ETHUSDT']
 symbols[, from := substr(symbol, 1, 3)]
-symbols <- merge(dt, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = TRUE, all.y = FALSE)
-symbols[, value := as.numeric(quantity) * usd]
-symbols[, sum(value)]
+symbols <- merge(symbols, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = TRUE, all.y = FALSE)
+symbols[, value := as.numeric(count) * usd]
 
+print(symbols[, sum(value)])
 
 # Plots
+library(ggplot2)
 
-p <- ggplot(klines, aes(close_time, close)) + geom_line()
-q <- 
+p <- ggplot(symbols, aes(x = from, y = usd)) + 
+  geom_point(stat = "identity") + 
+  labs(title = "Price of different bitcoins", 
+       y = "Price in USD", 
+       x = "Type of bitcoin")
+q <- ggplot(symbols, aes(x = from, y = count)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Number of transactions per bitcoin",
+       y = "Number of transactions",
+       x = "Type of bitcoin")
 
 
 # push plots to slack
-slackr_setup(username = 'juli', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
+slackr_setup(username = 'juli', bot_user_oauth_token = token, icon_emoji = ':moneybag:')
 ggslackr(plot = p, channels = '#ba-de5-2020-bots', width = 12)
 
 ggslackr(plot = q, channels = '#ba-de5-2020-bots', width = 12)
