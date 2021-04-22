@@ -27,6 +27,7 @@ p <- ggplot(symbols, aes(x = from, y = usd)) +
   labs(title = "Price of different bitcoins", 
        y = "Price in USD", 
        x = "Type of bitcoin")
+
 q <- ggplot(symbols, aes(x = from, y = count)) + 
   geom_bar(stat = "identity") +
   labs(title = "Number of transactions per bitcoin",
@@ -35,7 +36,10 @@ q <- ggplot(symbols, aes(x = from, y = count)) +
 
 
 # push plots to slack
+library(slackr)
+library(botor)
+botor(region = 'eu-west-1')
+token <- ssm_get_parameter('slack')
 slackr_setup(username = 'juli', bot_user_oauth_token = token, icon_emoji = ':moneybag:')
 ggslackr(plot = p, channels = '#ba-de5-2020-bots', width = 12)
-
 ggslackr(plot = q, channels = '#ba-de5-2020-bots', width = 12)
