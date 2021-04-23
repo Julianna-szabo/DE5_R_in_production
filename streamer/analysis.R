@@ -17,7 +17,9 @@ symbols[, from := substr(symbol, 1, 3)]
 symbols <- merge(symbols, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = TRUE, all.y = FALSE)
 symbols[, value := as.numeric(count) * usd]
 
-print(symbols[, sum(value)])
+sum <- (symbols[, sum(value)])
+
+print(paste0("The sum of the transactions was $", sum))
 
 # Plots
 library(ggplot2)
